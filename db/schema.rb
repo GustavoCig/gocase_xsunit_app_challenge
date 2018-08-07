@@ -10,14 +10,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_08_07_063608) do
+ActiveRecord::Schema.define(version: 2018_08_07_231648) do
 
-  create_table "survivors", id: :bigint, default: nil, options: "ENGINE=InnoDB DEFAULT CHARSET=latin1", force: :cascade do |t|
+  create_table "survivors", options: "ENGINE=InnoDB DEFAULT CHARSET=latin1", force: :cascade do |t|
     t.string "name", null: false
-    t.integer "age"
-    t.string "gender"
-    t.decimal "latitude", precision: 10, scale: 6
-    t.decimal "longitude", precision: 10, scale: 6
+    t.integer "age", null: false
+    t.string "gender", null: false
+    t.decimal "latitude", precision: 10, scale: 6, null: false
+    t.decimal "longitude", precision: 10, scale: 6, null: false
     t.integer "number_of_flags", default: 0, null: false
     t.boolean "is_abducted", default: false, null: false
     t.datetime "created_at", null: false

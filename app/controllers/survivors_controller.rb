@@ -1,10 +1,13 @@
 class SurvivorsController < ApplicationController
+  before_action :find_survivor, only: [:show]
+
   def index
-    @survivors = Survivor.all
+    survivors = Survivor.all
+    render json: survivors
   end
 
   def show
-    @survivor = Survivor.find(params[:id])
+    render json: @survivor
   end
 
   def new
@@ -12,36 +15,30 @@ class SurvivorsController < ApplicationController
   end
 
   def edit
-    @survivor = Survivor.find(params[:id])
   end
 
   def create
     @survivor = Survivor.new(create_survivor_params)
 
     if @survivor.save
+      render json: {message: 'Save successful'}
     else
     end
   end
 
   def update
-    @article = Article.find(params[:id])
-
-    if @article.update(article_params)
-    else
-    end
   end
 
   def destroy
   end
 
   def show_percentage_abducted
-    @survivors = Survivor.find(flagging_params)
   end
 
   private
 
   def create_survivor_params
-    params.require(:survivor).permit(:name, :age, :gender)
+    params.require(:survivor).permit(:name, :age, :gender, :latitude, :longitude)
   end
 
   def update_location_params
@@ -50,5 +47,9 @@ class SurvivorsController < ApplicationController
 
   def flagging_params
     params.require(:survivor).permit(:number_of_flags)
+  end
+
+  def find_survivor
+    @survivor = Survivor.find(params[:id])
   end
 end
