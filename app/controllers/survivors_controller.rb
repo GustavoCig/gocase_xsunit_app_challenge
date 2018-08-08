@@ -1,5 +1,5 @@
 class SurvivorsController < ApplicationController
-  before_action :find_survivor, only: [:show]
+  before_action :find_survivor, only: [:show, :flag_survivor]
 
   def index
     survivors = Survivor.all
@@ -30,6 +30,10 @@ class SurvivorsController < ApplicationController
   end
 
   def destroy
+  end
+
+  def flag_survivor
+
   end
 
   def show_percentage_abducted
