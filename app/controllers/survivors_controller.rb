@@ -26,7 +26,7 @@ class SurvivorsController < ApplicationController
       json_message(message_hash, :created)
     else
       message_hash["message"] = "Error during creation process!"
-      json_message(message_hash, :bad_request)
+      json_message(message_hash, :internal_server_error)
     end
   end
 
@@ -40,7 +40,7 @@ class SurvivorsController < ApplicationController
       json_message(message_hash)
     else
       message_hash["message"] = "Error during deletion process!"
-      json_message(message_hash, :bad_request)
+      json_message(message_hash, :internal_server_error)
     end
   end
 
@@ -63,7 +63,7 @@ class SurvivorsController < ApplicationController
         json_message(message_hash)
       else
         message_hash["message"] = "Error during survivor's parameters update!"
-        json_message(message_hash, :bad_request)
+        json_message(message_hash, :internal_server_error)
       end
     end
   end
