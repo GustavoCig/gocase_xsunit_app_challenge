@@ -1,5 +1,5 @@
 class SurvivorsController < ApplicationController
-  before_action :find_survivor, only: [:show, :flag_survivor]
+  before_action :find_survivor, only: [:show, :destroy, :flag_survivor]
 
   def index
     survivors = Survivor.all
@@ -30,6 +30,15 @@ class SurvivorsController < ApplicationController
   end
 
   def destroy
+    if @survivor.destroy
+      render json: {
+        message: "Survivor deleted successfully"
+        }
+    else
+      render json: {
+        message: "Error during deletion process!",
+      }, status: :bad_request
+    end
   end
 
   def flag_survivor
