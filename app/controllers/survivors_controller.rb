@@ -25,7 +25,7 @@ class SurvivorsController < ApplicationController
       message_hash["survivor"] = @survivor
       json_message(message_hash, :created)
     else
-      message_hash["message"] = "Error during creation process!"
+      message_hash["error"] = "Error during creation process!"
       json_message(message_hash, :internal_server_error)
     end
   end
@@ -46,7 +46,7 @@ class SurvivorsController < ApplicationController
                                 "Longitude(" + old_longitude.to_s + " => " + @survivor.longitude.to_s + ")"
       json_message(message_hash)
     else
-      message_hash["message"] = "Error during location update process!"
+      message_hash["error"] = "Error during location update process!"
       json_message(message_hash, :internal_server_error)
     end
   end
@@ -57,7 +57,7 @@ class SurvivorsController < ApplicationController
       message_hash["message"] = "Survivor " + @survivor.name + " - ID: " + @survivor.id.to_s + "has been deleted"
       json_message(message_hash)
     else
-      message_hash["message"] = "Error during deletion process!"
+      message_hash["error"] = "Error during deletion process!"
       json_message(message_hash, :internal_server_error)
     end
   end
@@ -82,23 +82,13 @@ class SurvivorsController < ApplicationController
       if @survivor.update(flagging_params)
         json_message(message_hash)
       else
-        message_hash["message"] = "Error during survivor's parameters update!"
+        message_hash["error"] = "Error during survivor's parameters update!"
         json_message(message_hash, :internal_server_error)
       end
     end
   end
 
   def show_percentage_abducted
-  end
-
-  def get_invalid_parameters(valid_parameters, parameters)
-    invalid_parameters = []
-    parameters.each do |key, value|
-      if !valid_parameters.include?(key)
-        invalid_parameters.push(key)
-      end
-    end
-    return invalid_parameters
   end
 
   private
@@ -119,7 +109,15 @@ class SurvivorsController < ApplicationController
     params.fetch(:survivor, {}).permit(:number_of_flags, :is_abducted)
   end
 
-
+  def get_invalid_parameters(valid_parameters, parameters)
+    invalid_parameters = []
+    parameters.each do |key, value|
+      if !valid_parameters.include?(key)
+        invalid_parameters.push(key)
+      end
+    end
+    return invalid_parameters
+  end
 
   def update_survivor_location(survivor, latitude=false, longitude=false)
     survivor.latitude = (latitude) ? latitude : survivor.latitude
