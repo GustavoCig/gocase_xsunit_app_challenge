@@ -19,14 +19,14 @@ class SurvivorsController < ApplicationController
 
   def create
     @survivor = Survivor.new(create_survivor_params)
-
+    message_hash = {}
     if @survivor.save
-      render json: {
-        message: "Survivor created",
-        survivor: @survivor
-      }
+      message_hash["message"] = "Survivor created"
+      message_hash["survivor"] = @survivor
+      json_message(message_hash, :created)
     else
-      simple_json_message("Error during creation process!", :bad_request)
+      message_hash["message"] = "Error during creation process!"
+      json_message(message_hash, :bad_request)
     end
   end
 
@@ -34,33 +34,36 @@ class SurvivorsController < ApplicationController
   end
 
   def destroy
+    message_hash = {}
     if @survivor.destroy
-      simple_json_message("Survivor deleted successfully")
+      message_hash["message"] = "Survivor " + @survivor.name + " - ID: " + @survivor.id + "has been deleted"
+      json_message(message_hash)
     else
-      simple_json_message("Error during deletion process!", :bad_request)
+      message_hash["message"] = "Error during deletion process!"
+      json_message(message_hash, :bad_request)
     end
   end
 
   def flag_survivor
     @survivor = Survivor.find(params[:id])
+    message_hash = {}
     if @survivor.is_abducted
-      simple_json_message("Survivor " + @survivor.name + " already been abducted!")
+      message_hash["message"] = "Survivor " + @survivor.name + " already been abducted!"
+      json_message(message_hash)
     else
-      puts 'TESTE'
-      puts @survivor.number_of_flags
       increment_survivor_flags(@survivor)
-      puts @survivor.number_of_flags
-      puts update_survivor_status(@survivor)
+      update_survivor_status(@survivor)
 
       message = "Survivor " + @survivor.name
       message += @survivor.is_abducted ? " has been abducted" : " is still safe..."
       message += ", flagged " + @survivor.number_of_flags.to_s + " time(s)"
-      puts message
-      
+      message_hash["message"] = message
+
       if @survivor.update(flagging_params)
-        simple_json_message(message)
+        json_message(message_hash)
       else
-        simple_json_message("Error during survivor's parameters update!", :bad_request)
+        message_hash["message"] = "Error during survivor's parameters update!"
+        json_message(message_hash, :bad_request)
       end
     end
   end
@@ -70,10 +73,8 @@ class SurvivorsController < ApplicationController
 
   private
 
-  def simple_json_message(message, status=:ok)
-    render json: {
-      message: message
-    }, status: status
+  def json_message(message_hash, status=:ok)
+    render json: message_hash.to_json, status: status
   end
 
   def create_survivor_params
