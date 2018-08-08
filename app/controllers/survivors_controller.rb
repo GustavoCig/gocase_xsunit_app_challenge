@@ -88,7 +88,15 @@ class SurvivorsController < ApplicationController
     end
   end
 
-  def show_percentage_abducted
+  def show_survivors_statistics
+    message_hash = {}
+    number_of_abductees = Survivor.where(is_abducted: true).count()
+    number_of_survivors = Survivor.all.count()
+    percentage_of_abductees = calculate_percentage(number_of_abductees, number_of_survivors)
+    percentage_of_safe_survivors = 100 - percentage_of_abductees
+    message_hash["percentage of abductees"] =  percentage_of_abductees.to_s + "%"
+    message_hash["percentage of safe survivors"] = percentage_of_safe_survivors.to_s + "%"
+    json_message(message_hash)
   end
 
   private
@@ -132,6 +140,10 @@ class SurvivorsController < ApplicationController
     if survivor.number_of_flags >= 3
       survivor.is_abducted = true
     end
+  end
+
+  def calculate_percentage(value, total)
+    (value*100)/total
   end
 
   def find_survivor
