@@ -21,8 +21,14 @@ class SurvivorsController < ApplicationController
     @survivor = Survivor.new(create_survivor_params)
 
     if @survivor.save
-      render json: {message: 'Save successful'}
+      render json: {
+        message: "Survivor created",
+        survivor: @survivor
+      }
     else
+      render json: {
+        message: "Error during creation process!"
+      }, status: :bad_request
     end
   end
 
