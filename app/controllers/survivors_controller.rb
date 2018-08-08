@@ -1,5 +1,5 @@
 class SurvivorsController < ApplicationController
-  before_action :find_survivor, only: [:show, :destroy, :flag_survivor]
+  before_action :find_survivor, only: [:show, :update, :destroy, :flag_survivor]
 
   def index
     survivors = Survivor.all
@@ -31,12 +31,30 @@ class SurvivorsController < ApplicationController
   end
 
   def update
+    message_hash = {}
+    valid_params = ["latitude", "longitude", "survivor", "id", "controller", "action"]
+    invalid_params = get_invalid_parameters(valid_params, params)
+    if !invalid_params.empty?
+      message_hash["warning"] = "Unnecessary/unused parameters sent: " + invalid_params.join(', ')
+    end
+    old_latitude = @survivor.latitude
+    old_longitude = @survivor.longitude
+    update_survivor_location(@survivor, params["latitude"], params["longitude"])
+    if @survivor.update(update_location_params)
+      message_hash["message"] = "Survivor " + @survivor.name + " location updated: " + 
+                                "Latitude(" + old_latitude.to_s + " => " + @survivor.latitude.to_s + "), " +
+                                "Longitude(" + old_longitude.to_s + " => " + @survivor.longitude.to_s + ")"
+      json_message(message_hash)
+    else
+      message_hash["message"] = "Error during location update process!"
+      json_message(message_hash, :internal_server_error)
+    end
   end
 
   def destroy
     message_hash = {}
     if @survivor.destroy
-      message_hash["message"] = "Survivor " + @survivor.name + " - ID: " + @survivor.id + "has been deleted"
+      message_hash["message"] = "Survivor " + @survivor.name + " - ID: " + @survivor.id.to_s + "has been deleted"
       json_message(message_hash)
     else
       message_hash["message"] = "Error during deletion process!"
@@ -49,6 +67,7 @@ class SurvivorsController < ApplicationController
     message_hash = {}
     if @survivor.is_abducted
       message_hash["message"] = "Survivor " + @survivor.name + " already been abducted!"
+      message_hash["survivor"] = @survivor
       json_message(message_hash)
     else
       increment_survivor_flags(@survivor)
@@ -58,6 +77,7 @@ class SurvivorsController < ApplicationController
       message += @survivor.is_abducted ? " has been abducted" : " is still safe..."
       message += ", flagged " + @survivor.number_of_flags.to_s + " time(s)"
       message_hash["message"] = message
+      message_hash["survivor"] = @survivor
 
       if @survivor.update(flagging_params)
         json_message(message_hash)
@@ -69,6 +89,16 @@ class SurvivorsController < ApplicationController
   end
 
   def show_percentage_abducted
+  end
+
+  def get_invalid_parameters(valid_parameters, parameters)
+    invalid_parameters = []
+    parameters.each do |key, value|
+      if !valid_parameters.include?(key)
+        invalid_parameters.push(key)
+      end
+    end
+    return invalid_parameters
   end
 
   private
@@ -87,6 +117,13 @@ class SurvivorsController < ApplicationController
 
   def flagging_params
     params.fetch(:survivor, {}).permit(:number_of_flags, :is_abducted)
+  end
+
+
+
+  def update_survivor_location(survivor, latitude=false, longitude=false)
+    survivor.latitude = (latitude) ? latitude : survivor.latitude
+    survivor.longitude = (longitude) ? longitude : survivor.longitude
   end
 
   def increment_survivor_flags(survivor)
