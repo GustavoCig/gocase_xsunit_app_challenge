@@ -14,15 +14,24 @@ class SurvivorsController < ApplicationController
   UPDATE_PARAMS = ["latitude", "longitude", "survivor", "id", "controller", "action"]
 
   # GET /survivors
-  # Can be specified a parameter 'fields' to show only specific parameters
-  # Defaults to all fields otherwise
-  # Example: /survivors?fields=id,name,age
+  # Can be specified a parameter 'fields' to show only specific parameters,
+  # a parameter 'per_page' to show a set amount of results per page,
+  # a parameter 'page' to specify which set of results to show.
+  # Example: /survivors?fields=id,name,age&per_page=5&page=3
   # If 'name' is in the query, orders alphabetically with respects to 'name'
   def index
-    fields = params['fields'] ? sanitize_fields_params(params['fields']) : "*"
-    fields = fields.empty? ? "*" : fields
-    survivors = Survivor.select(fields).order(:name)
-    render json: survivors
+    message_hash = {}
+    fields = get_url_fields(params["fields"])
+    results_per_page = get_limit_of_results_per_page(params["per_page"])
+    total = Survivor.count()
+    number_of_pages = get_num_pages(total, results_per_page)
+    order_by = define_sorting_attribute(fields)
+    page = define_current_page(params["page"], results_per_page)
+    message_hash["number of pages"] = number_of_pages
+    survivors = order_by ? Survivor.select(fields).order(order_by).limit(results_per_page).offset(page) : 
+                            Survivor.select(fields).order(:name).limit(results_per_page).offset(page)
+    message_hash["survivors"] = survivors
+    json_message(message_hash)
   end
 
   # GET /survivors/:id
@@ -38,7 +47,7 @@ class SurvivorsController < ApplicationController
     warning = create_unused_params_warning(SurvivorsController::CREATE_PARAMS, params)
     message_hash = message_hash.merge(warning)
     if @survivor.save
-      message_hash["message"] = "Survivor created"
+      message_hash["message"] = "Survivor created at /survivors/" + @survivor.id.to_s
       message_hash["survivor"] = @survivor
       json_message(message_hash, :created)
     else
@@ -137,6 +146,48 @@ class SurvivorsController < ApplicationController
 
   def flagging_params
     params.fetch(:survivor, {}).permit(:number_of_flags, :is_abducted)
+  end
+
+  def get_url_fields(url_fields)
+    fields = url_fields ? sanitize_fields_params(url_fields) : "*"
+    fields = fields.empty? ? "*" : fields
+  end
+
+  def get_limit_of_results_per_page(per_page)
+    if per_page.to_i != 0
+      limit = per_page.to_i
+    else
+      limit = Survivor.count()
+    end
+    return limit
+  end
+
+  def get_num_pages(total, num_per_page)
+    num_pages = total/num_per_page
+    if total % num_per_page != 0
+      num_pages += 1
+    end
+    return num_pages
+  end
+
+  def define_sorting_attribute(fields)
+    if fields.include?("name")
+      order_by = :name
+    elsif fields.include?("id")
+      order_by = :id
+    else
+      order_by = false
+    end
+    return order_by
+  end
+
+  def define_current_page(url_page, per_page)
+    if url_page
+      page = url_page.to_i * per_page
+    else
+      page = 0 * per_page
+    end
+    return page
   end
 
   # Cleans parameter 'fields' of any element not found in SurvivorsController::FIELDS
