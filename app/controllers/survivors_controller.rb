@@ -2,7 +2,7 @@ class SurvivorsController < ApplicationController
   before_action :find_survivor, only: [:show, :update, :destroy, :flag_survivor]
 
   def index
-    survivors = Survivor.all
+    survivors = Survivor.all.order(:name)
     render json: survivors
   end
 
@@ -10,16 +10,13 @@ class SurvivorsController < ApplicationController
     render json: @survivor
   end
 
-  def new
-    @survivor = Survivor.new
-  end
-
-  def edit
-  end
-
   def create
     @survivor = Survivor.new(create_survivor_params)
     message_hash = {}
+    valid_params = ["name", "age", "gender", "latitude", "longitude" "survivor", 
+                    "id", "controller", "action"]
+    invalid_params = get_invalid_parameters(valid_params, params)
+    message_hash["warning"] = create_unused_params_warning(invalid_params)
     if @survivor.save
       message_hash["message"] = "Survivor created"
       message_hash["survivor"] = @survivor
@@ -34,9 +31,7 @@ class SurvivorsController < ApplicationController
     message_hash = {}
     valid_params = ["latitude", "longitude", "survivor", "id", "controller", "action"]
     invalid_params = get_invalid_parameters(valid_params, params)
-    if !invalid_params.empty?
-      message_hash["warning"] = "Unnecessary/unused parameters sent: " + invalid_params.join(', ')
-    end
+    message_hash["warning"] = create_unused_params_warning(invalid_params)
     old_latitude = @survivor.latitude
     old_longitude = @survivor.longitude
     update_survivor_location(@survivor, params["latitude"], params["longitude"])
@@ -54,7 +49,7 @@ class SurvivorsController < ApplicationController
   def destroy
     message_hash = {}
     if @survivor.destroy
-      message_hash["message"] = "Survivor " + @survivor.name + " - ID: " + @survivor.id.to_s + "has been deleted"
+      message_hash["message"] = "Survivor " + @survivor.name + " - ID: " + @survivor.id.to_s + " has been deleted"
       json_message(message_hash)
     else
       message_hash["error"] = "Error during deletion process!"
@@ -125,6 +120,12 @@ class SurvivorsController < ApplicationController
       end
     end
     return invalid_parameters
+  end
+
+  def create_unused_params_warning(invalid_params)
+    if !invalid_params.empty?
+      "Unnecessary/unused parameters sent: " + invalid_params.join(', ')
+    end
   end
 
   def update_survivor_location(survivor, latitude=false, longitude=false)
