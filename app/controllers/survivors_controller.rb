@@ -1,12 +1,17 @@
 class SurvivorsController < ApplicationController
   before_action :find_survivor, only: [:show, :update, :destroy, :flag_survivor]
 
+  FIELDS = ["id", "name", "age", "gender", "latitude", "longitude", "number_of_flags",
+            "is_abducted", "created_at", "updated_at"]
   CREATE_PARAMS = ["name", "age", "gender", "latitude", "longitude", "survivor", 
                   "id", "controller", "action"]
   UPDATE_PARAMS = ["latitude", "longitude", "survivor", "id", "controller", "action"]
 
+
   def index
-    survivors = Survivor.all.order(:name)
+    fields = params['fields'] ? sanitize_fields_params(params['fields']) : "*"
+    fields = fields.empty? ? "*" : fields
+    survivors = Survivor.select(fields).order(:name)
     render json: survivors
   end
 
@@ -112,6 +117,16 @@ class SurvivorsController < ApplicationController
 
   def flagging_params
     params.fetch(:survivor, {}).permit(:number_of_flags, :is_abducted)
+  end
+
+  def sanitize_fields_params(fields)
+    valid_fields = []
+    fields.split(',').each do |field|
+      if SurvivorsController::FIELDS.include?(field)
+        valid_fields.push(field)
+      end
+    end
+    valid_fields
   end
 
   def get_invalid_parameters(valid_parameters, parameters)
