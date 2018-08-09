@@ -1,6 +1,10 @@
 class SurvivorsController < ApplicationController
   before_action :find_survivor, only: [:show, :update, :destroy, :flag_survivor]
 
+  CREATE_PARAMS = ["name", "age", "gender", "latitude", "longitude", "survivor", 
+                  "id", "controller", "action"]
+  UPDATE_PARAMS = ["latitude", "longitude", "survivor", "id", "controller", "action"]
+
   def index
     survivors = Survivor.all.order(:name)
     render json: survivors
@@ -13,10 +17,8 @@ class SurvivorsController < ApplicationController
   def create
     @survivor = Survivor.new(create_survivor_params)
     message_hash = {}
-    valid_params = ["name", "age", "gender", "latitude", "longitude", "survivor", 
-                    "id", "controller", "action"]
-    invalid_params = get_invalid_parameters(valid_params, params)
-    message_hash["warning"] = create_unused_params_warning(invalid_params)
+    warning = create_unused_params_warning(SurvivorsController::CREATE_PARAMS, params)
+    message_hash = message_hash.merge(warning)
     if @survivor.save
       message_hash["message"] = "Survivor created"
       message_hash["survivor"] = @survivor
@@ -30,9 +32,8 @@ class SurvivorsController < ApplicationController
 
   def update
     message_hash = {}
-    valid_params = ["latitude", "longitude", "survivor", "id", "controller", "action"]
-    invalid_params = get_invalid_parameters(valid_params, params)
-    message_hash["warning"] = create_unused_params_warning(invalid_params)
+    warning = create_unused_params_warning(SurvivorsController::UPDATE_PARAMS, params)
+    message_hash = message_hash.merge(warning)
     old_latitude = @survivor.latitude
     old_longitude = @survivor.longitude
     update_survivor_location(@survivor, params["latitude"], params["longitude"])
@@ -123,10 +124,13 @@ class SurvivorsController < ApplicationController
     return invalid_parameters
   end
 
-  def create_unused_params_warning(invalid_params)
+  def create_unused_params_warning(valid_params, in_use_params)
+    message = {}
+    invalid_params = get_invalid_parameters(valid_params, in_use_params)
     if !invalid_params.empty?
-      "Unnecessary/unused parameters sent: " + invalid_params.join(', ')
+      message["warning"] = "Unnecessary/unused parameters sent: " + invalid_params.join(', ')
     end
+    return message
   end
 
   def update_survivor_location(survivor, latitude=false, longitude=false)
