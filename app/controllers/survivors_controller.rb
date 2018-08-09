@@ -1,13 +1,23 @@
 class SurvivorsController < ApplicationController
   before_action :find_survivor, only: [:show, :update, :destroy, :flag_survivor]
 
+  # Controller constants definition
+  # FIELDS defined as a means of keeping track of which values are actual fields
+  # in the survivor's model
   FIELDS = ["id", "name", "age", "gender", "latitude", "longitude", "number_of_flags",
             "is_abducted", "created_at", "updated_at"]
+
+  # Both params are defined to highlight all the normal/valid parameters to be
+  # forwarded during their respective actions
   CREATE_PARAMS = ["name", "age", "gender", "latitude", "longitude", "survivor", 
                   "id", "controller", "action"]
   UPDATE_PARAMS = ["latitude", "longitude", "survivor", "id", "controller", "action"]
 
-
+  # GET /survivors
+  # Can be specified a parameter 'fields' to show only specific parameters
+  # Defaults to all fields otherwise
+  # Example: /survivors?fields=id,name,age
+  # If 'name' is in the query, orders alphabetically with respects to 'name'
   def index
     fields = params['fields'] ? sanitize_fields_params(params['fields']) : "*"
     fields = fields.empty? ? "*" : fields
@@ -15,10 +25,13 @@ class SurvivorsController < ApplicationController
     render json: survivors
   end
 
+  # GET /survivors/:id
   def show
     render json: @survivor
   end
 
+  # POST /survivors
+  # Warns the user if any parameter forwarded is unnecessary
   def create
     @survivor = Survivor.new(create_survivor_params)
     message_hash = {}
@@ -35,6 +48,8 @@ class SurvivorsController < ApplicationController
     end
   end
 
+  # PUT/PATCH /survivors/:id
+  # Updates only a survivor's 'latitude' or 'longitude'
   def update
     message_hash = {}
     warning = create_unused_params_warning(SurvivorsController::UPDATE_PARAMS, params)
@@ -53,6 +68,7 @@ class SurvivorsController < ApplicationController
     end
   end
 
+  # DELETE /survivors/:id
   def destroy
     message_hash = {}
     if @survivor.destroy
@@ -64,6 +80,8 @@ class SurvivorsController < ApplicationController
     end
   end
 
+  # GET /survivors/:id/flag
+  # Renders different messages to the user depending of the specified survivor state
   def flag_survivor
     @survivor = Survivor.find(params[:id])
     message_hash = {}
@@ -90,6 +108,8 @@ class SurvivorsController < ApplicationController
     end
   end
 
+  # GET /survivors/statistics
+  # Renders message contain percentual of abducted and non-abucted individuals
   def show_survivors_statistics
     message_hash = {}
     number_of_abductees = Survivor.where(is_abducted: true).count()
@@ -119,6 +139,7 @@ class SurvivorsController < ApplicationController
     params.fetch(:survivor, {}).permit(:number_of_flags, :is_abducted)
   end
 
+  # Cleans parameter 'fields' of any element not found in SurvivorsController::FIELDS
   def sanitize_fields_params(fields)
     valid_fields = []
     fields.split(',').each do |field|
@@ -148,6 +169,8 @@ class SurvivorsController < ApplicationController
     return message
   end
 
+  # Verifies if a value for latitude or longitude was passed and
+  # updates survivor's fields accordingly
   def update_survivor_location(survivor, latitude=false, longitude=false)
     survivor.latitude = (latitude) ? latitude : survivor.latitude
     survivor.longitude = (longitude) ? longitude : survivor.longitude

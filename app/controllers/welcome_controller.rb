@@ -1,4 +1,7 @@
 class WelcomeController < ApplicationController
+  
+  # GET root
+  # Displays a welcome message alongside a brief description of all the API's endpoints
   def index
     render json: {
                     message:"Welcome to XS-UNIT's API, this API was developed to aid in humanity's survival.",
