@@ -54,6 +54,7 @@ module V1
       else
         message_hash["error"] = "Error during creation process! Verify your parameters " +
                                 "and try again (Tip: 'gender', currently, can only be set as 'male' or 'female')"
+        message_hash["log"] = @survivor.errors
         json_message(message_hash, :internal_server_error)
       end
     end
@@ -74,6 +75,7 @@ module V1
         json_message(message_hash)
       else
         message_hash["error"] = "Error during location update process!"
+        message_hash["log"] = @survivor.errors
         json_message(message_hash, :internal_server_error)
       end
     end
@@ -86,6 +88,7 @@ module V1
         json_message(message_hash)
       else
         message_hash["error"] = "Error during deletion process!"
+        message_hash["log"] = @survivor.errors
         json_message(message_hash, :internal_server_error)
       end
     end
