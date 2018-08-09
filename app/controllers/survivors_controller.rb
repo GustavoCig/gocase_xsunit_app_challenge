@@ -13,7 +13,7 @@ class SurvivorsController < ApplicationController
   def create
     @survivor = Survivor.new(create_survivor_params)
     message_hash = {}
-    valid_params = ["name", "age", "gender", "latitude", "longitude" "survivor", 
+    valid_params = ["name", "age", "gender", "latitude", "longitude", "survivor", 
                     "id", "controller", "action"]
     invalid_params = get_invalid_parameters(valid_params, params)
     message_hash["warning"] = create_unused_params_warning(invalid_params)
@@ -22,7 +22,8 @@ class SurvivorsController < ApplicationController
       message_hash["survivor"] = @survivor
       json_message(message_hash, :created)
     else
-      message_hash["error"] = "Error during creation process!"
+      message_hash["error"] = "Error during creation process! Verify your parameters " +
+                              "and try again (Tip: 'gender', currently, can only be set as 'male' or 'female')"
       json_message(message_hash, :internal_server_error)
     end
   end
