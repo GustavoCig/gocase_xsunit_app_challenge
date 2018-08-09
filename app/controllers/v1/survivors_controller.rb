@@ -131,7 +131,14 @@ module V1
     end
 
     def find_survivor
-      @survivor = Survivor.find(params[:id])
+      begin
+        @survivor = Survivor.find(params[:id])
+      rescue ActiveRecord::RecordNotFound
+        message_hash = {}
+        message_hash["error"] = "Survivor " + params[:id] + " not found," +
+                                " please check your parameters and try again"
+        json_message(message_hash, :not_found) 
+      end
     end
     
   end
